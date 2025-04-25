@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <title>Dashboard gRPC vs WebSocket</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+  <style>
+    .zone {
+      width: 500px;
+      height: 500px;
+      position: relative;
+      border: 2px dashed #555;
+      background: #1e1e1e;
+      margin: 0 auto;
+    }
+    .car {
+      width: 20px;
+      height: 20px;
+      position: absolute;
+      font-size: 18px;
+      text-align: center;
+      line-height: 1;
+    }
+  </style>
+</head>
+<body class="bg-zinc-900 text-gray-200 p-6">
+  <h1 class="text-4xl font-bold mb-8 text-center text-white">
+    Comparaison : <span class="text-red-500">gRPC</span> vs <span class="text-blue-400">WebSocket</span>
+  </h1>
+
+  <div class="flex flex-wrap gap-4 justify-center mb-8">
+    <label class="flex items-center gap-2">Voitures :
+      <input type="number" id="humans" value="500" min="1" class="bg-zinc-800 border border-zinc-600 rounded px-2 py-1 w-20 text-white">
+    </label>
+    <label class="flex items-center gap-2">Intervalle (ms) :
+      <input type="number" id="interval" value="20" min="10" step="50" class="bg-zinc-800 border border-zinc-600 rounded px-2 py-1 w-20 text-white">
+    </label>
+    <button onclick="start()" class="bg-blue-600 text-white px-4 py-1 rounded hover:bg-blue-700">Démarrer</button>
+    <button onclick="resetSimulation()" class="bg-gray-500 text-white px-4 py-1 rounded hover:bg-gray-600">Réinitialiser</button>
+  </div>
+
+  <div class="zone mb-10" id="sharedZone"></div>
+
+  <!-- Graphiques ligne -->
+  <div class="grid grid-cols-2 gap-10 max-w-6xl mx-auto mb-16">
+    <div>
+      <h2 class="text-xl font-semibold text-center text-white mb-2">📈 Latence en temps réel</h2>
+      <canvas id="line-live" height="200"></canvas>
+    </div>
+    <div>
+      <h2 class="text-xl font-semibold text-center text-white mb-2">📉 Latence moyenne (5s)</h2>
+      <canvas id="line-5s" height="200"></canvas>
+    </div>
+  </div>
+
+  <!-- Graphiques barres -->
+  <div class="grid grid-cols-2 gap-10 max-w-6xl mx-auto mb-16">
+    <div>
+      <h2 class="text-xl font-semibold text-center text-white mb-2">📊 Barres Live</h2>
+      <canvas id="bar-live" height="100"></canvas>
+    </div>
+    <div>
+      <h2 class="text-xl font-semibold text-center text-white mb-2">⏱️ Barres 5 secondes</h2>
+      <canvas id="bar-5s" height="100"></canvas>
+    </div>
+  </div>
+
+  <!-- Tableaux -->
+  <div class="grid grid-cols-2 gap-10 max-w-7xl mx-auto">
+    <div>
+      <h2 class="text-lg font-semibold text-red-400 mb-2">Statistiques gRPC</h2>
+      <table class="w-full text-sm text-gray-100 border border-zinc-700">
+        <thead class="bg-zinc-800 border-b border-zinc-700">
+          <tr>
+            <th class="py-1">Protocole</th><th>Latence</th><th>Moyenne</th><th>Min</th><th>Max</th><th>Maj/s</th><th>Messages</th>
+          </tr>
+        </thead>
+        <tbody id="grpc-table" class="text-center"></tbody>
+      </table>
+    </div>
+    <div>
+      <h2 class="text-lg font-semibold text-blue-400 mb-2">Statistiques WebSocket</h2>
+      <table class="w-full text-sm text-gray-100 border border-zinc-700">
+        <thead class="bg-zinc-800 border-b border-zinc-700">
+          <tr>
+            <th class="py-1">Protocole</th><th>Latence</th><th>Moyenne</th><th>Min</th><th>Max</th><th>Maj/s</th><th>Messages</th>
+          </tr>
+        </thead>
+        <tbody id="ws-table" class="text-center"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <script src="main.js"></script>
+</body>
+</html>

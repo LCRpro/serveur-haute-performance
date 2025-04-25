@@ -1,0 +1,18 @@
+services:
+  grpc-server:
+    build: ./grpc-server
+    ports:
+      - "50051:50051"
+
+  ws-server:
+    build: ./ws-server
+    ports:
+      - "3001:3001"
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "8080:80"
+    depends_on:
+      - grpc-server
+      - ws-server
