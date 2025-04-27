@@ -1,11 +1,4 @@
-// Nouvelle structure de main.js avec 4 graphiques distincts :
-// - Ligne live
-// - Ligne 5s
-// - Barres live
-// - Barres 5s
-
 let raceRunning = false;
-let chartLive, chart5s;
 let barChartLive, barChart5s;
 let tickCount = 0;
 
@@ -24,9 +17,7 @@ function resetSimulation() {
   document.getElementById("grpc-table").innerHTML = "";
   document.getElementById("ws-table").innerHTML = "";
 
-  [chartLive, chart5s, barChartLive, barChart5s].forEach(c => c && c.destroy());
-  chartLive = createLineChart("line-live", "Latence Live");
-  chart5s = createLineChart("line-5s", "Latence Moyenne (5s)");
+  [barChartLive, barChart5s].forEach(c => c && c.destroy());
   barChartLive = createBarChart("bar-live");
   barChart5s = createBarChart("bar-5s");
 }
@@ -47,13 +38,7 @@ function createOrMove(id, zone, x, y, symbol) {
 function updateStats(car, timestamp) {
   const now = Date.now();
   if (!stats[car]) {
-    stats[car] = {
-      latencies: [],
-      last: 0,
-      count: 0,
-      perSecond: 0,
-      lastSecondTimestamp: 0
-    };
+    stats[car] = { latencies: [], last: 0, count: 0, perSecond: 0, lastSecondTimestamp: 0 };
   }
   const s = stats[car];
   const latency = now - timestamp;
@@ -67,29 +52,6 @@ function updateStats(car, timestamp) {
   const currentSecond = Math.floor(now / 1000);
   s.perSecond = (s.lastSecondTimestamp !== currentSecond) ? 1 : s.perSecond + 1;
   s.lastSecondTimestamp = currentSecond;
-}
-
-function createLineChart(id, labelText) {
-  const ctx = document.getElementById(id).getContext("2d");
-  return new Chart(ctx, {
-    type: "line",
-    data: {
-      labels: [],
-      datasets: [
-        { label: "gRPC", data: [], borderColor: "red", tension: 0.3, fill: false },
-        { label: "WebSocket", data: [], borderColor: "blue", tension: 0.3, fill: false }
-      ]
-    },
-    options: {
-      responsive: true,
-      animation: false,
-      plugins: { legend: { display: true }, title: { display: true, text: labelText } },
-      scales: {
-        y: { beginAtZero: true },
-        x: { ticks: { autoSkip: true, maxTicksLimit: 10 } }
-      }
-    }
-  });
 }
 
 function createBarChart(id) {
@@ -171,8 +133,6 @@ function start() {
   fetch('http://localhost:3001/config', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ humans, interval }) });
 
   const sharedZone = document.getElementById('sharedZone');
-  chartLive = createLineChart("line-live", "Latence Live");
-  chart5s = createLineChart("line-5s", "Latence Moyenne (5s)");
   barChartLive = createBarChart("bar-live");
   barChart5s = createBarChart("bar-5s");
 
@@ -195,20 +155,10 @@ function start() {
       const values = latencyBuffer[proto];
       if (!values.length) return;
       const avg = values.reduce((a, b) => a + b, 0) / values.length;
-      const label = `${(tickCount * interval).toFixed(0)}ms`;
-
-      if (!chartLive.data.labels.includes(label)) chartLive.data.labels.push(label);
-      if (!chart5s.data.labels.includes(label)) chart5s.data.labels.push(label);
-
-      chartLive.data.datasets[i].data.push(+avg.toFixed(2));
-      if (chartLive.data.datasets[i].data.length > 20) chartLive.data.datasets[i].data.shift();
-
       latencyBuffer[proto] = [];
+      barChartLive.data.datasets[0].data[i] = +avg.toFixed(2);
       renderStatsAverage(proto);
     });
-    chartLive.update();
-
-    barChartLive.data.datasets[0].data = [chartLive.data.datasets[0].data.at(-1) || 0, chartLive.data.datasets[1].data.at(-1) || 0];
     barChartLive.update();
     tickCount++;
   }, interval);
@@ -217,18 +167,8 @@ function start() {
     ["grpc", "ws"].forEach((proto, i) => {
       const snap = statsAverageFor(proto);
       if (snap) last5sStats[proto] = snap;
-
-      const label = `${tickCount * interval}ms`;
-      if (!chart5s.data.labels.includes(label)) chart5s.data.labels.push(label);
-      chart5s.data.datasets[i].data.push(last5sStats[proto].avg.toFixed(2));
-      if (chart5s.data.datasets[i].data.length > 20) chart5s.data.datasets[i].data.shift();
+      barChart5s.data.datasets[0].data[i] = last5sStats[proto]?.avg?.toFixed(2) || 0;
     });
-
-    chart5s.update();
-    barChart5s.data.datasets[0].data = [
-      last5sStats.grpc ? last5sStats.grpc.avg.toFixed(2) : 0,
-      last5sStats.ws ? last5sStats.ws.avg.toFixed(2) : 0
-    ];
     barChart5s.update();
   }, 5000);
 }

@@ -16,11 +16,9 @@ app.post('/config', (req, res) => {
   interval = Number(req.body.interval || 1000); 
   console.log(`✅ gRPC: ${humanCount} humains / ${interval}ms`);
 
-  // Clear previous
   intervals.forEach(clearInterval);
   intervals = [];
 
-  // Setup intervals per human
   for (let i = 0; i < humanCount; i++) {
     intervals[i] = setInterval(() => {
       const data = {

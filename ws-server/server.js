@@ -12,12 +12,10 @@ let interval = 1000;
 let intervals = [];
 let sockets = [];
 
-// 👉 On démarre Express
 const server = app.listen(port, () => {
   console.log(`✅ WebSocket server listening on ws://localhost:${port}`);
 });
 
-// 👉 On attache WebSocket au serveur Express
 const wss = new WebSocket.Server({ server });
 
 wss.on('connection', (ws) => {
@@ -29,10 +27,9 @@ wss.on('connection', (ws) => {
 
 app.post('/config', (req, res) => {
   humanCount = Number(req.body.humans || 10);
-  interval = Number(req.body.interval || 1000); // en ms directement
+  interval = Number(req.body.interval || 1000);
   console.log(`✅ WebSocket: ${humanCount} humains / ${interval}ms`);
 
-  // Clear existing
   intervals.forEach(clearInterval);
   intervals = [];
 
